@@ -1,76 +1,69 @@
-import { Component } from "react";
-import { Searchbar } from './components/SearchBar/SearchBar';
+import React, { useState, useEffect } from 'react';
+import { SearchBar } from './components/SearchBar/SearchBar';
 import { ImageGallery } from './components/ImageGallery/ImageGallery';
 import { Button } from './components/Button/Button';
 import { fetchImages } from './services/api';
 import { STATUSES } from './utils/constants';
 import { Loader } from './components/Loader/Loader';
 
-export class App extends Component{
-  state = {
-    searchText: '',
-    data: null,
-    status: STATUSES.idle,
-    error: null,
-    page: 1,
-    isModalOpen: false,
-    loadMore: false
-  }
+export const App = () => {
+  const [searchText, setSearchText] = useState('');
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState(STATUSES.idle);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loadMore, setLoadMore] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  onSubmit = e => {
+   const onSubmit = e => {
     e.preventDefault();
-    const searchText = e.currentTarget.elements.searchText.value;
-
-    if (this.state.searchText !== searchText) {
-      this.setState({
-        searchText: searchText,
-        data: null,
-        page: 1,
-      })
+    const newSearchText = e.currentTarget.elements.searchText.value.trim();
+    
+    if (!newSearchText) {
+      return;
     }
+
+      setSearchText(newSearchText);
+      setData(null);
+      setPage(1);
+      setHasMounted(true)
   }
 
-  getImages = async (searchText, page) => {
+
+  const getImages = async (searchText, page) => {
     try {
-      this.setState({ status: STATUSES.pending });
-      const data = await fetchImages(searchText, page);
-      this.setState({ status: STATUSES.success, loadMore: this.state.page < Math.ceil(data.totalHits / 12 )})
-      return data;
+      setStatus(STATUSES.pending);
+      const fetchedData = await fetchImages(searchText, page);
+      setStatus(STATUSES.success);
+      setLoadMore(page < Math.ceil(fetchedData.totalHits / 12));
+      return fetchedData;
+    } catch (error) {
+      setError(error.message);
+      setStatus(STATUSES.error);
     }
-    catch (error){
-      this.setState({
-        error: error.message,
-        status:STATUSES.error
-      })
+  };
+
+  const onLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
+
+    useEffect(() => {
+    if (hasMounted) {
+      getImages(searchText, page).then(fetchData => {
+      setData(prevData => prevData ? [...prevData, ...fetchData.hits] : fetchData.hits )
+    })
     }
-  }
+  }, [page, searchText, hasMounted])
 
-  onLoadMore = () => {
-    const nextPage = this.state.page + 1;
-    this.setState({ page: nextPage })
-  }
-
-  componentDidUpdate = (_prevProps, prevState) => {
-    if (this.state.page !== prevState.page ||
-      this.state.searchText !== prevState.searchText) {
-        this.getImages(this.state.searchText, this.state.page).then(fetchData => {
-          this.setState(prevState =>
-          (
-            prevState.data ? {
-            data: [...prevState.data, ...fetchData.hits],
-            } : { data: fetchData.hits }))
-        })
-    }
-  }
-
-  render() {
     return (
       <div>
-        <Searchbar onSubmit={this.onSubmit}/>
-        <ImageGallery data={this.state.data}></ImageGallery>
-        {this.state.data && this.state.loadMore && <Button onLoadMore={this.onLoadMore}></Button>}
-        {this.state.status === STATUSES.pending && <Loader></Loader>}
+        {error && <p>{ error}</p>}
+        <SearchBar onSubmit={onSubmit}/>
+        <ImageGallery data={data}></ImageGallery>
+        {data && loadMore && <Button onLoadMore={onLoadMore}></Button>}
+        {status === STATUSES.pending && <Loader></Loader>}
       </div>
     );
-  }
 };
+
+

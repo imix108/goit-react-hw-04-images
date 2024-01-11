@@ -1,39 +1,35 @@
-import { Component } from 'react'
+import { useEffect } from 'react'
 import css from './Modal.module.css'
 
-export class Modal extends Component {
+export const Modal = ({closeModal, modalData}) => {
 
   
-  handleCloseModal = (e) => {
+  const handleCloseModal = (e) => {
     if (e.target === e.currentTarget) {
-      this.props.closeModal();
+      closeModal();
     }
   }
 
-  handleModalOnEscClose = (e) => {
+  useEffect(() => {
+
+    const handleModalOnEscClose = (e) => {
     if (e.code === 'Escape') {
-      this.props.closeModal();
+      closeModal();
     }
   }
-
-  componentDidMount() {
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', this.handleModalOnEscClose)
-  }
-
-  componentWillUnmount() {
-    document.body.style.overflow = 'auto';
-    window.removeEventListener('keydown', this.handleModalOnEscClose)
-  }
+    document.documentElement.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleModalOnEscClose)
+    return () => {
+      document.documentElement.style.overflow = 'auto';
+      window.removeEventListener('keydown', handleModalOnEscClose)
+    }
+  }, [closeModal])
   
-  render() {
   return (
-    <div className={css.overlay} onClick={this.handleCloseModal}>
-      <div className={css.modal}>
-        <img src={this.props.modalData} alt="" />
+    <div className={css.Overlay} onClick={handleCloseModal}>
+      <div className={css.Modal}>
+        <img src={modalData} alt="" />
       </div>
     </div>
   )
-  }
-  
 }
