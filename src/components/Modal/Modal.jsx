@@ -26,7 +26,7 @@ export const Modal = ({closeModal, modalData}) => {
   }, [closeModal])
   
   return (
-    <div className={css.Overlay} onClick={handleCloseModal}>
+    <div className={css.overlay} onClick={handleCloseModal}>
       <div className={css.Modal}>
         <img src={modalData} alt="" />
       </div>
