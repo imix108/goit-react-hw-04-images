@@ -19,7 +19,7 @@ export const ImageGallery =({data}) => {
   }
 
     return (
-    <ul className={css.ImageGallery}>
+    <ul className={css.imageGallery}>
         {data?.map(dataElem => {
         return (
           <ImageGalleryItem key={dataElem.id} id={dataElem.id} webImg={dataElem.webformatURL} handleModal={handleModal}></ImageGalleryItem>
